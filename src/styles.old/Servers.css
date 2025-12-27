@@ -1,0 +1,96 @@
+/* General container styling */
+.servers-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+    background-color: #121212; /* Matches theme */
+}
+
+/* Title styling */
+.servers-title {
+    font-size: 2rem;
+    color: #00b7ff;
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px rgba(0, 183, 255, 0.8), 0 0 25px rgba(0, 183, 255, 0.5);
+}
+
+/* Server list grid */
+.servers-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+/* Individual server item */
+.server-item {
+    background-color: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s, box-shadow 0.3s ease;
+}
+
+.server-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 183, 255, 0.5);
+}
+
+/* Console button styling */
+.console-button {
+    background-color: #00b7ff;
+    color: #000;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s ease;
+}
+
+.console-button:hover {
+    background-color: #007bbd;
+    transform: scale(1.05);
+}
+
+/* Create Server button styling */
+.create-server-button {
+    background-color: #00b7ff;
+    color: #000;
+    border: none;
+    padding: 12px 20px; /* Slightly larger padding for consistency */
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s ease;
+    margin-top: 20px; /* Adds spacing between the button and the list */
+    display: block;
+    margin-left: auto;
+    margin-right: auto; /* Center the button */
+}
+
+.create-server-button:hover {
+    background-color: #007bbd;
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+/* No servers message */
+.no-servers-text {
+    text-align: center;
+    color: #bbbbbb;
+    font-style: italic;
+}
+
+/* Error message */
+.error-text {
+    text-align: center;
+    color: #ff4d4d;
+    font-weight: bold;
+    margin-bottom: 20px;
+}

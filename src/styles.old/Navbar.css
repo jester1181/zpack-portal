@@ -1,0 +1,79 @@
+/* Navbar container */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000; /* Black background */
+    padding: 10px 20px;
+    border-bottom: 2px solid #007bff; /* Blue border effect */
+    font-family: Arial, sans-serif;
+}
+
+/* Navbar links container */
+.navbar-links {
+    display: flex;
+    gap: 20px;
+}
+
+/* Navbar link styling */
+.navbar-link {
+    color: #007bff; /* Blue text */
+    text-decoration: none;
+    background-color: #000; /* Black background for links */
+    border: 2px solid #007bff; /* Blue border */
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Logout button styling */
+.logout-button {
+    color: #007bff;
+    background-color: #000; /* Match navbar background */
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover effects */
+.navbar-link:hover,
+.logout-button:hover {
+    background-color: #007bff; /* Blue background on hover */
+    color: #000; /* Black text on hover */
+}
+
+/* Active link styling */
+.navbar-link.active {
+    background-color: #007bff; /* Active blue background */
+    color: #000; /* Black text */
+    border-color: #000; /* Black border */
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(0, 183, 255, 0.8); /* Add glow for active link */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .navbar-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .logout-button {
+        align-self: flex-start;
+        margin-top: 10px;
+    }
+}

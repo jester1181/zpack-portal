@@ -1,0 +1,72 @@
+/* Page background */
+body {
+    background: linear-gradient(135deg, #000000, #1a1a1a 70%);
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure the background covers the full height */
+    display: flex; /* Add flex to center the content vertically if needed */
+    flex-direction: column;
+}
+
+/* General container styling */
+.dashboard-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: none; /* Remove any conflicting background from the container */
+    color: #ffffff; /* Light text for contrast */
+    min-height: calc(100vh - 80px); /* Ensure it spans the full view height minus navbar */
+    box-sizing: border-box;
+}
+
+/* Dashboard title styling */
+.dashboard-title {
+    font-size: 2.5rem;
+    color: #00b7ff; /* Neon blue for a modern look */
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px rgba(0, 183, 255, 0.8), 0 0 25px rgba(0, 183, 255, 0.5);
+}
+
+.dashboard-description {
+    text-align: center;
+    font-size: 1rem;
+    color: #bbbbbb;
+    margin-top: 10px;
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeIn 1.5s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* Subtitle for instructions or descriptions */
+.dashboard-subtitle {
+    font-size: 1rem;
+    text-align: center;
+    color: #cccccc; /* Lighter text for contrast */
+    margin-bottom: 30px;
+}
+
+/* Button styles */
+.button-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Adjustments for mobile and responsive design */
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 2rem;
+    }
+
+    .dashboard-container {
+        padding: 10px;
+    }
+}
