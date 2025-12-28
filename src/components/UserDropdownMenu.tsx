@@ -30,13 +30,13 @@ const UserDropdownMenu: React.FC<Props> = ({ nickname, onLogout }) => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-electricBlue text-black font-bold text-sm hover:bg-neonGreen transition"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-electricBlue text-black font-bold text-sm hover:bg-electricBlueLight transition"
       >
         {nickname.charAt(0).toUpperCase()}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 bg-darkGray text-lightGray rounded shadow-lg w-40">
+        <div className="absolute right-0 mt-2 bg-darkGray text-lightGray rounded shadow-subtle w-40">
           <Link
             href="/profile"
             className="block px-4 py-2 hover:bg-electricBlue hover:text-black"

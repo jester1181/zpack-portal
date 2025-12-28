@@ -196,7 +196,9 @@ return (
           <div className="space-y-6">
             <BillingSummaryCard status={accountStatus} daysRemaining={suspensionDaysRemaining ?? undefined} />
             <div>
-              <h3 className="text-xs font-mono text-cyan-300 uppercase mb-2 tracking-widest">Recent Activity</h3>
+              <h3 className="mb-2 text-xs font-mono uppercase tracking-widest text-electricBlueLight">
+                Recent Activity
+              </h3>
               <AuditLogPreview />
             </div>
           </div>
@@ -237,9 +239,24 @@ return (
       <div className="w-full">
         <TechFramePanel title="⚡ Quick Actions">
           <div className="flex flex-wrap gap-4 justify-center mt-2">
-            <button onClick={() => handlePowerAction("start")} className="bg-green-500 text-black px-4 py-2 rounded hover:bg-green-600 hover:shadow-[0_0_10px_#00FF88]">Start All</button>
-            <button onClick={() => handlePowerAction("stop")} className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 hover:shadow-[0_0_10px_#FFD700]">Stop All</button>
-            <button onClick={() => handlePowerAction("restart")} className="bg-blue-500 text-black px-4 py-2 rounded hover:bg-blue-600 hover:shadow-[0_0_10px_#40CFFF]">Restart All</button>
+            <button
+              onClick={() => handlePowerAction("start")}
+              className="rounded bg-electricBlue px-4 py-2 text-black hover:bg-electricBlueLight"
+            >
+              Start All
+            </button>
+            <button
+              onClick={() => handlePowerAction("stop")}
+              className="rounded bg-dangerRed px-4 py-2 text-black hover:bg-red-400"
+            >
+              Stop All
+            </button>
+            <button
+              onClick={() => handlePowerAction("restart")}
+              className="rounded bg-electricBlue px-4 py-2 text-black hover:bg-electricBlueLight"
+            >
+              Restart All
+            </button>
             <Link href="/servers/create" className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">Create Server</Link>
             <a href={consoleUrl} target="_blank" className="bg-electricBlue text-black px-4 py-2 rounded hover:bg-blue-600">Go to Console</a>
           </div>

@@ -47,7 +47,7 @@ const GroupedServerList = ({ servers, onAction, onConsole, onUpgrade }: Props) =
               {servers.map((server) => (
                 <li
                   key={server.uuid}
-                  className="bg-darkGray p-4 rounded shadow flex justify-between items-center"
+                  className="bg-darkGray p-4 rounded shadow-subtle flex justify-between items-center"
                 >
                   <div>
                     <p className="text-white font-bold">{server.name}</p>
@@ -55,7 +55,7 @@ const GroupedServerList = ({ servers, onAction, onConsole, onUpgrade }: Props) =
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="px-4 py-2 bg-electricBlue text-black rounded hover:bg-neonGreen transition"
+                      className="px-4 py-2 bg-electricBlue text-black rounded hover:bg-electricBlueLight transition"
                       onClick={() => onConsole(server.uuid)}
                     >
                       Go to Console

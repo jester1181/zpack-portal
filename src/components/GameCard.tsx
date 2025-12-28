@@ -11,13 +11,13 @@ const GameCard = ({ gameKey, serverName, status }: GameCardProps) => {
   const game = gameInfo[gameKey] || gameInfo["fallback"];
 
   const statusColor = {
-    online: "text-green-400",
-    offline: "text-red-400",
-    installing: "text-yellow-400",
+    online: "text-electricBlueLight",
+    offline: "text-dangerRed",
+    installing: "text-electricBlue",
   }[status || "offline"];
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-md hover:shadow-cyan-500/50 overflow-hidden w-full max-w-xs transition">
+    <div className="w-full max-w-xs overflow-hidden rounded-lg bg-gray-800 shadow-subtle transition hover:shadow-hover-glow">
       <div className="relative w-full h-36">
         <Image
           src={game.image}

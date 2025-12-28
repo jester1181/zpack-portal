@@ -27,7 +27,7 @@ const AuditLogPreview = () => {
   }, []);
 
   return (
-    <div className="bg-darkGray p-4 rounded shadow">
+    <div className="bg-darkGray p-4 rounded shadow-subtle">
       <h3 className="text-lg font-bold text-white mb-2">📜 Recent Activity</h3>
       {logs.length === 0 ? (
         <p className="text-lightGray text-sm">No recent activity found.</p>

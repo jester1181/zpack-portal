@@ -36,23 +36,23 @@ const Pricing = () => {
                         ].map((plan, index) => (
                             <div
                                 key={index}
-                                className={`p-6 bg-darkGray rounded-lg shadow-md border border-gray-700 ${
+                                className={`p-6 bg-darkGray rounded-lg shadow-subtle border border-gray-700 ${
                                     plan.popular
-                                        ? "border-electricBlue scale-105"
-                                        : "hover:scale-105 hover:border-electricBlue"
+                                        ? "border-electricBlue"
+                                        : "hover:border-electricBlue"
                                 } transition-transform`}
                             >
                                 <h2 className="text-2xl font-bold text-electricBlue mb-3">
                                     {plan.title}
                                 </h2>
-                                <p className="text-xl text-neonGreen mb-4">{plan.price}</p>
+                                <p className="text-xl text-electricBlueLight mb-4">{plan.price}</p>
                                 <ul className="text-lightGray space-y-2">
                                     {plan.features.map((feature, i) => (
                                         <li key={i}>{feature}</li>
                                     ))}
                                 </ul>
                                 {plan.popular && (
-                                    <div className="mt-4 text-sm font-bold text-neonGreen uppercase">
+                                    <div className="mt-4 text-sm font-bold text-electricBlueLight uppercase">
                                         Most Popular
                                     </div>
                                 )}
@@ -88,7 +88,7 @@ const Pricing = () => {
                             By using ZeroLagHub, you agree to comply with our{" "}
                             <a
                                 href="/terms-of-service"
-                                className="text-electricBlue underline hover:text-neonGreen transition"
+                                className="text-electricBlue underline hover:text-electricBlueLight transition"
                             >
                                 Terms of Service
                             </a>

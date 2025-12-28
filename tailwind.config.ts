@@ -15,7 +15,7 @@ export default {
         background: "#111215",
         foreground: "#F8F9FA",
         electricBlue: "#1F8EFF",
-        neonGreen: "#32FF7E",
+        electricBlueLight: "#4DA3FF",
         dangerRed: "#FF5E5E",
         darkGray: "#1A1A1A",
         lightGray: "#CCCCCC",
@@ -28,23 +28,12 @@ export default {
         body: ["Roboto", "sans-serif"],
       },
       boxShadow: {
-        subtle: "0 2px 4px rgba(0, 0, 0, 0.1)",
-        glow: "0 0 8px rgba(31, 142, 255, 0.8)",
-        "glow-inner": "inset 0 0 200px rgba(0, 255, 255, 0.02)",
+        subtle: "0 2px 4px rgba(0, 0, 0, 0.3)",
+        "hover-glow": "0 0 4px rgba(31, 142, 255, 0.2)",
       },
       backgroundImage: {
         'steel-gradient': "linear-gradient(135deg, #101215, #0b0c0f)",
-        'glow-overlay': "radial-gradient(ellipse at center, rgba(0,255,255,0.03), transparent)",
         'steel-texture': "url('/textures/hdsteel-bg.webp')",
-      },
-      keyframes: {
-        slowShift: {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-        },
-      },
-      animation: {
-        'slow-shift': 'slowShift 20s ease infinite',
       },
       screens: {
         xs: "480px",

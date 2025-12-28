@@ -51,7 +51,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen bg-transparent px-6 py-10">
-            <div className="p-8 bg-darkGray rounded-lg shadow-lg max-w-md w-full">
+            <div className="p-8 bg-darkGray rounded-lg shadow-subtle max-w-md w-full">
                 <h1 className="text-3xl font-heading text-electricBlue mb-6 text-center">
                     Create an Account
                 </h1>
@@ -61,7 +61,7 @@ const Register = () => {
                     </p>
                 )}
                 {success && (
-                    <p className="text-green-500 bg-green-100 p-2 rounded mb-4">
+                    <p className="mb-4 rounded bg-electricBlue/10 p-2 text-electricBlue">
                         Registration successful!
                     </p>
                 )}
@@ -74,7 +74,7 @@ const Register = () => {
                             value={formData.firstName}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <div>
@@ -85,7 +85,7 @@ const Register = () => {
                             value={formData.lastName}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <div>
@@ -96,7 +96,7 @@ const Register = () => {
                             value={formData.username}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <div>
@@ -107,7 +107,7 @@ const Register = () => {
                             value={formData.email}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <div>
@@ -118,7 +118,7 @@ const Register = () => {
                             value={formData.password}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <div>
@@ -129,12 +129,12 @@ const Register = () => {
                             value={formData.confirmPassword}
                             onChange={handleInputChange}
                             required
-                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+                        className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
                     >
                         Register
                     </button>

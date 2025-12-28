@@ -58,7 +58,7 @@ const Support = () => {
                         </p>
                     )}
                     {success && (
-                        <p className="text-green-500 bg-green-100 p-2 rounded mb-4 text-center">
+                        <p className="mb-4 rounded bg-electricBlue/10 p-2 text-center text-electricBlue">
                             {success}
                         </p>
                     )}
@@ -71,7 +71,7 @@ const Support = () => {
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -82,7 +82,7 @@ const Support = () => {
                                 value={formData.email}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -93,7 +93,7 @@ const Support = () => {
                                 value={formData.subject}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -104,12 +104,12 @@ const Support = () => {
                                 onChange={handleInputChange}
                                 rows={5}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <button
                             type="submit"
-                            className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+                            className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
                         >
                             Submit
                         </button>

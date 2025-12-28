@@ -202,7 +202,11 @@ const CreateServer = () => {
                 <div className="max-w-screen-lg mx-auto">
                     <h1 className="text-4xl font-heading text-electricBlue mb-6">Create a New Server</h1>
                     {error && <p className="text-red-500 bg-red-100 p-2 rounded mb-4">{error}</p>}
-                    {success && <p className="text-green-500 bg-green-100 p-2 rounded mb-4">{success}</p>}
+                    {success && (
+                      <p className="mb-4 rounded bg-electricBlue/10 p-2 text-electricBlue">
+                        {success}
+                      </p>
+                    )}
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label className="block text-lightGray mb-1">Server Name:</label>
@@ -211,7 +215,7 @@ const CreateServer = () => {
                                 value={serverName}
                                 onChange={(e) => setServerName(e.target.value)}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -220,7 +224,7 @@ const CreateServer = () => {
                                 value={selectedNestId || ""}
                                 onChange={(e) => handleNestChange(Number(e.target.value))}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             >
                                 <option value="">Select a game</option>
                                 {nests.map((nest) => (
@@ -237,7 +241,7 @@ const CreateServer = () => {
                                     value={selectedEggId || ""}
                                     onChange={(e) => handleEggChange(Number(e.target.value))}
                                     required
-                                    className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                    className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                                 >
                                     <option value="">Select a server type</option>
                                     {eggs.map((egg) => (
@@ -254,7 +258,7 @@ const CreateServer = () => {
                                 value={selectedAllocationId || ""}
                                 onChange={(e) => setSelectedAllocationId(Number(e.target.value))}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             >
                                 <option value="">Select an allocation</option>
                                 {allocations.map((allocation) => (
@@ -271,7 +275,7 @@ const CreateServer = () => {
                                 value={memory}
                                 onChange={(e) => setMemory(Number(e.target.value))}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -281,7 +285,7 @@ const CreateServer = () => {
                                 value={disk}
                                 onChange={(e) => setDisk(Number(e.target.value))}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -291,7 +295,7 @@ const CreateServer = () => {
                                 value={cpu}
                                 onChange={(e) => setCpu(Number(e.target.value))}
                                 required
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         <div>
@@ -300,7 +304,7 @@ const CreateServer = () => {
                                 type="text"
                                 value={startup}
                                 readOnly
-                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                             />
                         </div>
                         {game === "Project Zomboid" && (
@@ -311,13 +315,13 @@ const CreateServer = () => {
                                     value={adminPassword}
                                     onChange={(e) => setAdminPassword(e.target.value)}
                                     required
-                                    className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                                    className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                                 />
                             </div>
                         )}
                         <button
                             type="submit"
-                            className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+                            className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
                         >
                             {loading ? "Creating Server..." : "Create Server"}
                         </button>

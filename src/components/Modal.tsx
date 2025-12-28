@@ -25,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-darkGray p-6 rounded-lg shadow-lg text-center w-full max-w-sm border border-electricBlue">
+      <div className="bg-darkGray p-6 rounded-lg shadow-subtle text-center w-full max-w-sm border border-electricBlue">
         <h2 className="text-lg font-bold text-electricBlue mb-4">{title}</h2>
         <p className="text-foreground mb-6">{message}</p>
         <div className="flex justify-center gap-4">
@@ -38,7 +38,7 @@ const Modal: React.FC<ModalProps> = ({
           {onConfirm && (
             <button
               onClick={onConfirm}
-              className="px-4 py-2 rounded bg-neonGreen text-black font-bold hover:bg-electricBlue transition"
+              className="px-4 py-2 rounded bg-electricBlueLight text-black font-bold hover:bg-electricBlue transition"
             >
               {confirmText}
             </button>

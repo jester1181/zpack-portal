@@ -49,7 +49,7 @@ const Features = () => {
                         ].map((feature, index) => (
                             <div
                                 key={index}
-                                className="p-6 bg-darkGray rounded-lg shadow-md hover:shadow-xl transition-shadow"
+                                className="rounded-lg bg-darkGray p-6 shadow-subtle transition-shadow hover:shadow-hover-glow"
                             >
                                 <div className="text-4xl mb-4">{feature.icon}</div>
                                 <h2 className="text-electricBlue text-2xl font-bold mb-3">

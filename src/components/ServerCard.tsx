@@ -16,16 +16,16 @@ const ServerCard = ({ name, game, status, children }: ServerCardProps) => {
   console.log("🧠 Raw game key:", game);
 
   const statusColor = {
-    online: "text-green-400",
-    offline: "text-red-500",
-    starting: "text-yellow-400",
+    online: "text-electricBlueLight",
+    offline: "text-dangerRed",
+    starting: "text-electricBlueLight",
     stopping: "text-gray-400",
-    suspended: "text-orange-400",
+    suspended: "text-dangerRed",
     unknown: "text-gray-400",
   }[status || "unknown"];
 
   return (
-    <div className="flex items-center bg-darkGray rounded-lg shadow-lg overflow-hidden p-3 w-full">
+    <div className="flex items-center bg-darkGray rounded-lg shadow-subtle overflow-hidden p-3 w-full">
       {/* Game Thumbnail */}
       <div className="relative w-52 h-50 rounded overflow-hidden flex-shrink-0">
       <Image

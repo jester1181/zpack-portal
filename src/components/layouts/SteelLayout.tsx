@@ -15,15 +15,6 @@ const SteelLayout = ({ children }: Props) => {
         aria-hidden="true"
       />
 
-      {/* Optional Ambient Glow (subtle radial light effect) */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse at center, rgba(0,255,255,0.02), transparent)",
-        }}
-        aria-hidden="true"
-      />
-
       {/* Content Layer */}
       <main className="relative z-10">{children}</main>
     </div>

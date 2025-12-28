@@ -106,7 +106,7 @@ const Login = () => {
   return (
     <SteelLayout>
       <div className="flex items-center justify-center min-h-screen">
-        <div className="p-8 bg-darkGray rounded-lg shadow-lg max-w-sm text-center">
+        <div className="p-8 bg-darkGray rounded-lg shadow-subtle max-w-sm text-center">
           <Image
             src="/images/zlhlogo_enlarged.png"
             alt="ZeroLagHub Logo"
@@ -127,7 +127,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
               />
             </div>
             <div>
@@ -138,12 +138,12 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-neonGreen"
+                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
               />
             </div>
             <button
               type="submit"
-              className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+              className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
             >
               Login
             </button>

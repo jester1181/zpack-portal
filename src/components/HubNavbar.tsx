@@ -33,7 +33,7 @@ const HubNavbar = () => {
         {/* Toggle Button */}
         <button
           onClick={() => setOpen(!open)}
-          className="p-2 rounded-full bg-electricBlue text-black hover:bg-neonGreen transition shadow-md"
+          className="rounded-full bg-electricBlue p-2 text-black transition hover:bg-electricBlueLight"
           aria-label="Toggle Navigation Menu"
         >
           <Icon
@@ -47,16 +47,16 @@ const HubNavbar = () => {
 
       {/* Dropdown Menu – anchored below logo+button */}
       {open && (
-        <div className="absolute top-[88px] left-4 z-40 w-48 bg-black/90 backdrop-blur border border-electricBlue rounded-md shadow-lg py-3 px-4 space-y-2">
+        <div className="absolute left-4 top-[88px] z-40 w-48 rounded-md border border-white/10 bg-black/90 px-4 py-3 backdrop-blur shadow-subtle space-y-2">
           {links.map(({ href, label }) => (
             <Link
   key={href}
   href={href}
   onClick={() => setOpen(false)}
-  className={`block px-4 py-2 rounded text-sm font-medium transition-all duration-200 ${
+  className={`block rounded px-4 py-2 text-sm font-medium transition-colors duration-200 ${
     isActive(href)
-      ? "bg-electricBlue text-black font-bold shadow-[0_0_10px_#1f8eff80]"
-      : "text-lightGray hover:text-electricBlue hover:bg-darkGray hover:shadow-[0_0_8px_#1f8eff50]"
+      ? "bg-electricBlue text-black font-bold"
+      : "text-lightGray hover:bg-darkGray hover:text-electricBlue"
   }`}
 >
   {label}

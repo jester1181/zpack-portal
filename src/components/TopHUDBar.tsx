@@ -1,7 +1,7 @@
 // components/TopHUDBar.tsx
 const TopHUDBar = () => (
-    <div className="w-full h-3 bg-gradient-to-r from-cyan-500 via-transparent to-cyan-500 opacity-50 blur-sm mt-2 mb-4" />
-  );
-  
-  export default TopHUDBar;
+  <div className="mb-4 mt-2 h-px w-full bg-white/10" />
+);
+
+export default TopHUDBar;
   

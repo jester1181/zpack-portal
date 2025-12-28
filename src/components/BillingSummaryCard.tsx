@@ -2,9 +2,9 @@ import Link from "next/link";
 
 const BillingSummaryCard = ({ status, daysRemaining }: { status: string; daysRemaining?: number }) => {
   const statusColor = {
-    active: "text-green-400",
-    past_due: "text-yellow-400",
-    suspended: "text-red-500",
+    active: "text-electricBlueLight",
+    past_due: "text-dangerRed",
+    suspended: "text-dangerRed",
   }[status] || "text-white";
 
   const message = {
@@ -14,7 +14,7 @@ const BillingSummaryCard = ({ status, daysRemaining }: { status: string; daysRem
   }[status] || "Billing status unknown.";
 
   return (
-    <div className="bg-darkGray p-4 rounded shadow text-center">
+    <div className="bg-darkGray p-4 rounded shadow-subtle text-center">
       <h3 className="text-lg font-bold text-white mb-2">💳 Billing Summary</h3>
       <p className={`${statusColor} font-semibold`}>{message}</p>
       <Link href="/billing" className="text-electricBlue underline text-sm mt-2 inline-block">Manage Billing</Link>

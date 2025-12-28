@@ -41,11 +41,11 @@ const Navbar: React.FC = () => {
     <>
       <SuspensionBanner daysRemaining={suspensionDaysRemaining} />
 
-      <nav className="bg-black/80 backdrop-blur-sm border-b border-electricBlue text-foreground flex items-center justify-between px-6 py-3 sticky top-0 z-50 shadow-md">
+      <nav className="bg-black/80 backdrop-blur-sm border-b border-electricBlue text-foreground flex items-center justify-between px-6 py-3 sticky top-0 z-50 shadow-subtle">
         {/* Logo */}
         <Link
           href="/"
-          className="text-electricBlue text-xl font-bold hover:text-neonGreen transition"
+          className="text-electricBlue text-xl font-bold hover:text-electricBlueLight transition"
         >
           ZeroLagHub
         </Link>
@@ -72,7 +72,7 @@ const Navbar: React.FC = () => {
               className={`px-2 py-1 rounded-md transition 
                 ${
                   isActive(link.href)
-                    ? "text-electricBlue font-bold border-b-2 border-neonGreen"
+                    ? "text-electricBlue font-bold border-b-2 border-electricBlueLight"
                     : "text-lightGray font-medium hover:text-electricBlue hover:bg-darkGray"
                 }`}
             >
@@ -94,7 +94,7 @@ const Navbar: React.FC = () => {
             </Link>
             <Link
               href="/register"
-              className="px-3 py-1 rounded-md bg-electricBlue text-black font-semibold hover:bg-neonGreen transition"
+              className="px-3 py-1 rounded-md bg-electricBlue text-black font-semibold hover:bg-electricBlueLight transition"
             >
               Register
             </Link>

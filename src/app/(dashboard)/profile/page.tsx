@@ -93,7 +93,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-10">
-      <div className="max-w-screen-md mx-auto bg-gray-800 p-6 rounded shadow">
+      <div className="max-w-screen-md mx-auto bg-gray-800 p-6 rounded shadow-subtle">
         <h1 className="text-3xl text-electricBlue font-heading mb-6">👤 Profile</h1>
 
         {loading ? (
@@ -170,7 +170,7 @@ const Profile = () => {
                 disabled={!hasChanges}
                 className={`px-4 py-2 rounded transition font-semibold ${
                   hasChanges
-                    ? "bg-electricBlue text-black hover:bg-neonGreen"
+                    ? "bg-electricBlue text-black hover:bg-electricBlueLight"
                     : "bg-gray-600 text-gray-300 cursor-not-allowed"
                 }`}
               >

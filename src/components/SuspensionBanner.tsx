@@ -12,7 +12,7 @@ const SuspensionBanner: React.FC<Props> = ({ daysRemaining }) => {
   if (daysRemaining === null || daysRemaining <= 0) return null;
 
   return (
-    <div className="w-full bg-yellow-500 text-black text-center py-2 font-semibold">
+    <div className="w-full bg-dangerRed text-white text-center py-2 font-semibold">
       ⚠️ Account suspension in {daysRemaining} day{daysRemaining > 1 ? "s" : ""}
     </div>
   );

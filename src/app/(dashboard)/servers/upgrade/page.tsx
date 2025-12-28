@@ -58,7 +58,7 @@ function UpgradeServer() {
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-10">
-      <div className="max-w-screen-sm mx-auto bg-gray-800 p-6 rounded shadow">
+      <div className="max-w-screen-sm mx-auto bg-gray-800 p-6 rounded shadow-subtle">
         <h1 className="text-3xl font-heading text-electricBlue mb-4 text-center">Upgrade Server</h1>
 
         <label className="block text-lightGray mb-2">Memory (MB):</label>
@@ -88,7 +88,7 @@ function UpgradeServer() {
         <button
           onClick={handleUpgrade}
           disabled={loading}
-          className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+          className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
         >
           {loading ? "Upgrading..." : "Upgrade Server"}
         </button>

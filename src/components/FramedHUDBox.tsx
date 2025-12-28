@@ -12,15 +12,14 @@ type Props = {
 
 const FramedHUDBox = ({ title, children, className }: Props) => {
   return (
-    <div className={clsx(
-      "relative border border-cyan-500 bg-darkGray/80 text-white rounded-md p-5 shadow-lg",
-      "before:absolute before:-top-2 before:left-4 before:h-2 before:w-6 before:bg-cyan-500",
-      "after:absolute after:-bottom-2 after:right-4 after:h-2 after:w-6 after:bg-cyan-500",
-      "hover:shadow-cyan-500/50 transition-all duration-300",
-      className
-    )}>
+    <div
+      className={clsx(
+        "relative rounded-md border border-white/10 bg-darkGray/80 p-5 text-white shadow-subtle",
+        className
+      )}
+    >
       {title && (
-        <h2 className="text-xs uppercase tracking-wide text-cyan-400 mb-3">
+        <h2 className="mb-3 text-xs uppercase tracking-wide text-electricBlue">
           {title}
         </h2>
       )}

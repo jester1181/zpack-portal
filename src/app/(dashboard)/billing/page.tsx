@@ -70,14 +70,14 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen bg-transparent px-6 py-10">
-      <div className="bg-gray-800 p-8 rounded shadow max-w-md w-full text-center">
+      <div className="bg-gray-800 p-8 rounded shadow-subtle max-w-md w-full text-center">
         <h1 className="text-3xl text-electricBlue font-heading mb-4">Billing</h1>
 
         {loading ? (
           <p className="text-lightGray">Loading...</p>
         ) : profile?.billing_status === "active" ? (
           <>
-            <p className="text-green-400 mb-2 font-medium">
+            <p className="mb-2 font-medium text-electricBlueLight">
               ✅ Your account is in good standing.
             </p>
             <p className="text-lightGray mb-6">
@@ -87,14 +87,14 @@ export default function BillingPage() {
             </p>
             <button
               onClick={handleOpenPortal}
-              className="bg-neonGreen hover:bg-electricBlue transition text-black font-semibold px-5 py-2 rounded"
+              className="bg-electricBlueLight hover:bg-electricBlue transition text-black font-semibold px-5 py-2 rounded"
             >
               Manage Subscription
             </button>
           </>
         ) : (
           <>
-            <p className="text-yellow-400 font-semibold mb-2">
+            <p className="mb-2 font-semibold text-dangerRed">
               ⚠️ Your account is not active.
             </p>
             <p className="text-lightGray mb-4">
@@ -102,7 +102,7 @@ export default function BillingPage() {
             </p>
             <button
               onClick={handleCheckout}
-              className="bg-electricBlue text-black font-semibold px-5 py-2 rounded hover:bg-neonGreen transition"
+              className="bg-electricBlue text-black font-semibold px-5 py-2 rounded hover:bg-electricBlueLight transition"
             >
               Subscribe Now – $10/month
             </button>

@@ -148,7 +148,7 @@ const ServersPage = () => {
               {servers.map((server) => (
                 <li
                   key={server.uuid}
-                  className="bg-darkGray p-4 rounded shadow flex justify-between items-center"
+                  className="bg-darkGray p-4 rounded shadow-subtle flex justify-between items-center"
                 >
                   <div>
                     <p className="text-white font-bold">{server.name}</p>
@@ -156,7 +156,7 @@ const ServersPage = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="px-4 py-2 bg-electricBlue text-black rounded hover:bg-neonGreen transition"
+                      className="px-4 py-2 bg-electricBlue text-black rounded hover:bg-electricBlueLight transition"
                       onClick={() => handleConsole(server.uuid)}
                     >
                       Go to Console
@@ -187,7 +187,7 @@ const ServersPage = () => {
 
         <div className="text-center mt-10">
           <button
-            className="px-6 py-3 bg-electricBlue text-black font-bold rounded hover:bg-neonGreen transition"
+            className="px-6 py-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
             onClick={() => router.push("/servers/create")}
           >
             Create Server

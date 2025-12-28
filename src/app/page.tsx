@@ -28,13 +28,13 @@ export default function Home() {
                     <div className="flex space-x-4">
                         <a
                             href="/register"
-                            className="px-8 py-4 bg-electricBlue text-black font-bold text-lg rounded-lg hover:bg-neonGreen transition transform hover:scale-105 shadow-md"
+                            className="px-8 py-4 bg-electricBlue text-black font-bold text-lg rounded-lg hover:bg-electricBlueLight transition shadow-subtle"
                         >
                             Get Started
                         </a>
                         <a
                             href="/features"
-                            className="px-8 py-4 border border-electricBlue text-electricBlue font-bold text-lg rounded-lg hover:bg-electricBlue hover:text-black transition transform hover:scale-105"
+                            className="px-8 py-4 border border-electricBlue text-electricBlue font-bold text-lg rounded-lg hover:bg-electricBlue hover:text-black transition"
                         >
                             Learn More
                         </a>
