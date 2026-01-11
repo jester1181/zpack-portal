@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ const Register = () => {
         confirmPassword: "",
         firstName: "",
         lastName: "",
+        displayName: "",
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -31,7 +32,16 @@ const Register = () => {
         }
 
         try {
-            await api.post("/auth/register", formData);
+            const payload = {
+                email: formData.email,
+                username: formData.username,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                displayName: formData.displayName,
+            };
+
+            await api.registerAccount(payload);
             setSuccess(true);
             alert("Registration successful! You can now log in.");
             window.location.href = "/login";
@@ -50,7 +60,7 @@ const Register = () => {
     }
 
     return (
-        <div className="min-h-screen bg-transparent px-6 py-10">
+        <div className="min-h-screen bg-transparent px-6 py-10 flex items-center justify-center">
             <div className="p-8 bg-darkGray rounded-lg shadow-subtle max-w-md w-full">
                 <h1 className="text-3xl font-heading text-electricBlue mb-6 text-center">
                     Create an Account
@@ -96,6 +106,16 @@ const Register = () => {
                             value={formData.username}
                             onChange={handleInputChange}
                             required
+                            className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-lightGray mb-1">Display Name:</label>
+                        <input
+                            type="text"
+                            name="displayName"
+                            value={formData.displayName}
+                            onChange={handleInputChange}
                             className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
                         />
                     </div>

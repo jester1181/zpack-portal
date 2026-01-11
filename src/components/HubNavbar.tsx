@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@iconify/react";
+import { useAuth } from "@/context/authContext";
+import UserDropdownMenu from "@/components/UserDropdownMenu";
 
 const links = [
   { href: "/", label: "Home" },
@@ -14,14 +16,25 @@ const links = [
   { href: "/faq", label: "FAQ" },
   { href: "/support", label: "Support" },
   { href: "/about", label: "About" },
-  { href: "/profile", label: "Profile" },
 ];
 
 const HubNavbar = () => {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { token, logout, profile } = useAuth();
+  const [nickname, setNickname] = useState("User");
 
   const isActive = (href: string) => pathname === href;
+
+  useEffect(() => {
+    if (profile?.nickname) {
+      setNickname(profile.nickname);
+    } else if (profile?.username) {
+      setNickname(profile.username);
+    } else {
+      setNickname("User");
+    }
+  }, [profile]);
 
   return (
     <>
@@ -63,6 +76,12 @@ const HubNavbar = () => {
 </Link>
 
           ))}
+        </div>
+      )}
+
+      {token && (
+        <div className="fixed top-4 right-4 z-50">
+          <UserDropdownMenu nickname={nickname} onLogout={logout} />
         </div>
       )}
     </>

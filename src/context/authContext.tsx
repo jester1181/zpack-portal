@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import api from "@/lib/api";
+import { getSessionToken, setSessionToken } from "@/lib/auth/session";
 
 interface UserProfile {
   email: string;
@@ -17,8 +19,6 @@ interface AuthContextProps {
   setToken: (token: string | null) => void;
   isReady: boolean;
   tokenRestored: boolean;
-  showModal: boolean;
-  refreshToken: () => void;
   logout: () => void;
   profile: UserProfile | null;
   billingStatus: string | null;
@@ -32,15 +32,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setTokenState] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [tokenRestored, setTokenRestored] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [billingStatus, setBillingStatus] = useState<string | null>(null);
   const [suspensionDaysRemaining, setSuspensionDaysRemaining] = useState<number | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  // Load token from localStorage on initial mount
+  // Load token from sessionStorage on initial mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = getSessionToken();
     if (storedToken) {
       setTokenState(storedToken);
     }
@@ -49,33 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const setToken = (newToken: string | null) => {
-    if (newToken) {
-      localStorage.setItem("token", newToken);
-    } else {
-      localStorage.removeItem("token");
-    }
+    setSessionToken(newToken);
     setTokenState(newToken);
-  };
-
-  const refreshToken = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh-token`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Token refresh failed");
-      }
-
-      const data = await response.json();
-      console.log("🔁 Token refreshed:", data.token);
-      setToken(data.token);
-      setShowModal(false);
-    } catch (err) {
-      console.error("🔒 Refresh failed:", err);
-      logout();
-    }
   };
 
   const logout = () => {
@@ -83,7 +57,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setProfile(null);
     setBillingStatus(null);
     setSuspensionDaysRemaining(null);
-    localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
@@ -97,25 +70,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/profile`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await api.getMe(token);
+        const user = response.data?.user ?? {};
+
+        console.log("✅ Profile fetched:", user);
+
+        setProfile({
+          email: user.email ?? "",
+          username: user.username ?? "",
+          first_name: user.firstName ?? "",
+          last_name: user.lastName ?? "",
+          nickname: user.displayName ?? "",
         });
+        setBillingStatus(user.billing_status ?? null);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch profile");
-        }
-
-        const data = await response.json();
-        console.log("✅ Profile fetched:", data);
-
-        setProfile(data);
-        setBillingStatus(data.billing_status || null);
-
-        if (data.suspended_at) {
-          const suspendedAt = new Date(data.suspended_at);
+        if (user.suspended_at) {
+          const suspendedAt = new Date(user.suspended_at);
           const now = new Date();
         
           const diffMs = now.getTime() - suspendedAt.getTime();
@@ -153,8 +123,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken,
         isReady,
         tokenRestored,
-        showModal,
-        refreshToken,
         logout,
         profile,
         billingStatus,

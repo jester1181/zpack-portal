@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
 
 type LogItem = {
   id: number;
@@ -16,7 +16,7 @@ const AuditLogPreview = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const res = await api.get("/api/audit"); 
+        const res = await api.listAuditLogs(); 
         setLogs(res.data.logs || []);
       } catch (err) {
         console.error("Failed to load audit logs", err);

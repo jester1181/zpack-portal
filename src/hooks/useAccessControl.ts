@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/authContext";
-import api from "@/lib/api-client"; // ✅ Using Axios instead of fetch
+import api from "@/lib/api"; // ✅ Using Axios instead of fetch
 
 export const useAccessControl = (options = { autoRedirect: false }) => {
   const { token } = useAuth();
@@ -16,11 +16,7 @@ export const useAccessControl = (options = { autoRedirect: false }) => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await api.get("/api/users/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.getProfile(token);
 
         const data = res.data;
         setStatus(data.billing_status ?? "active"); // fallback to active if missing

@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/authContext";
 
 function UpgradeServer() {
   const params = useSearchParams();
   const uuid = params.get("uuid");
+  const { token } = useAuth();
 
   const [memory, setMemory] = useState(1024);
   const [disk, setDisk] = useState(10240);
@@ -18,10 +20,7 @@ function UpgradeServer() {
     if (!uuid) return;
     const fetchServerInfo = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await api.get(`/api/servers/${uuid}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+        const response = await api.getServer(token, uuid);
           
 
         const { limits } = response.data;
@@ -34,19 +33,14 @@ function UpgradeServer() {
     };
 
     fetchServerInfo();
-  }, [uuid]);
+  }, [uuid, token]);
 
   const handleUpgrade = async () => {
     if (!uuid) return;
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      await api.put(
-        `/api/servers/${uuid}/upgrade`,
-        { memory, disk, cpu },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.upgradeServer(token, uuid, { memory, disk, cpu });
 
       toast.success("Server upgraded successfully!");
     } catch {

@@ -1,273 +1,269 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
-import api from "@/lib/api-client";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import toast from "react-hot-toast";
-//import { Icon } from "@iconify/react";
-
-import "react-circular-progressbar/dist/styles.css";
-import MessageBoard from "@/components/MessageBoard";
-import BillingSummaryCard from "@/components/BillingSummaryCard";
-import AuditLogPreview from "@/components/AuditLogPreview";
-//import HudPanel from "@/components/HudPanel";
-//import HUDBox from "@/components/HUDBox";
-//import ServerHUDOverview from "@/components/ServerHUDOverview";
-import RadialStat from "@/components/RadialStat";
-//import HUDFramedPanel from "@/components/HUDFramedPanel";
-//import SystemControlHUD from "@/components/SystemControlHUD";
-import WelcomeCoreHUD from "@/components/WelcomeCoreHUD";
-import TechFramePanel from "@/components/TechFramePanel";
-//import HUDScaffold from "@/components/HUDScaffold";
-
-
-
-
-type JwtPayload = { email: string };
-type ServerStatus = {
-  uuid: string;
-  name: string;
-  status: string;
-  resources?: {
-    memory_bytes: number;
-    disk_bytes: number;
-    cpu_absolute: number;
-  };
-};
+import api from "@/lib/api";
+import { useAuth } from "@/context/authContext";
 
 const Dashboard = () => {
-  const [username, setUsername] = useState("User");
-  const [consoleUrl, setConsoleUrl] = useState("https://panel.zerolaghub.com");
-  const [serverList, setServerList] = useState<ServerStatus[]>([]);
-  const [selectedServer, setSelectedServer] = useState<string>("");
-  const [suspensionDaysRemaining, setSuspensionDaysRemaining] = useState<number | null>(null);
-  const [accountStatus, setAccountStatus] = useState<string>("active");
+  const { profile } = useAuth();
+  const [apiHealth, setApiHealth] = useState<"ok" | "down">("down");
+  const [noticesHeader, setNoticesHeader] = useState("Since your last login");
+  const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
+  const [hasLiveUpdate, setHasLiveUpdate] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [stats, setStats] = useState({
-    total: 0,
-    online: 0,
-    offline: 0,
-  });
+  const displayName = useMemo(() => {
+    return profile?.nickname || profile?.username || "User";
+  }, [profile]);
 
-  const selectedStats = serverList.find((s) => s.uuid === selectedServer);
+  const notices = useMemo(
+    () => [
+      {
+        id: "notice-maintenance",
+        type: "System Notice",
+        title: "Scheduled maintenance window",
+        body: "Platform updates planned for 02:00–03:00 UTC. No action required.",
+        detail:
+          "Rolling updates will be applied to the orchestration layer. Existing servers remain online, but provisioning actions may be delayed during the window.",
+      },
+      {
+        id: "notice-billing",
+        type: "Warning",
+        title: "Billing verification pending",
+        body: "Verify your billing profile to avoid provisioning delays.",
+        detail:
+          "Billing verification is required before any new server allocations are finalized. Update your billing profile to clear the pending status.",
+      },
+      {
+        id: "notice-community",
+        type: "Announcement",
+        title: "New community templates available",
+        body: "Browse the latest curated templates in the server catalog.",
+        detail:
+          "Community templates now include curated modpacks for Valheim, Rust, and Minecraft. Visit the server catalog to review details.",
+      },
+    ],
+    []
+  );
 
-  const fetchStatus = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  const [healthStatus] = useState<"healthy" | "degraded" | "issue">("healthy");
 
-      const [serversRes, statusRes] = await Promise.all([
-        api.get("/api/environment/servers", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get<{ statuses: ServerStatus[] }>("/api/environment/server-status", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      const servers = serversRes.data.servers || [];
-      const statuses = statusRes.data.statuses || [];
-
-      setServerList(statuses);
-      setStats({
-        total: servers.length,
-        online: statuses.filter((s) => s.status === "running").length,
-        offline: statuses.filter((s) => s.status !== "running").length,
-      });
-    } catch {
-      // silent fail
+  const healthConfig = useMemo(() => {
+    if (healthStatus === "issue") {
+      return {
+        bars: 1,
+        color: "bg-dangerRed",
+        label: "Critical issues detected",
+      };
     }
-  };
+    if (healthStatus === "degraded") {
+      return {
+        bars: 3,
+        color: "bg-yellow-400",
+        label: "Some services degraded",
+      };
+    }
+    return {
+      bars: 4,
+      color: "bg-emerald-500",
+      label: "All systems operational",
+    };
+  }, [healthStatus]);
 
-  const handlePowerAction = async (action: "start" | "stop" | "restart") => {
-    const token = localStorage.getItem("token");
-    const toastId = toast.loading(`${action.toUpperCase()}ING all servers...`);
-    try {
-      if (!token) return;
-      await Promise.allSettled(
-        serverList.map((s) =>
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/servers/${s.uuid}/${action}`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          })
-        )
-      );
-      toast.success(`${action.toUpperCase()}ED all servers`, { id: toastId });
-      fetchStatus();
-    } catch {
-      toast.error(`Failed to ${action} all servers`, { id: toastId });
-    } 
-  }; 
+  const resources = useMemo(
+    () => [
+      { id: "srv-101", name: "Valheim - Core", type: "Game", status: "Online" },
+      { id: "srv-204", name: "Rust - Staging", type: "Game", status: "Provisioning" },
+      { id: "dev-01", name: "Dev Sandbox", type: "Dev", status: "Offline" },
+    ],
+    []
+  );
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const ssoToken = sessionStorage.getItem("sso_token");
-    if (ssoToken) {
-      setConsoleUrl(`https://panel.zerolaghub.com/login/token?access_token=${ssoToken}`);
-    }
-  
-    const initialize = async () => {
-      if (token) {
-        try {
-          const decoded = jwtDecode<JwtPayload>(token);
-          const fallbackName = decoded.email?.split("@")[0] || "User";
-  
-          const profileRes = await api.get("/api/users/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-  
-          const nickname = profileRes.data.nickname;
-          const suspendedAt = profileRes.data.suspended_at;
-          const status = profileRes.data.billing_status;
-  
-          setUsername(nickname || fallbackName);
-          setAccountStatus(status || "active");
-  
-          if (suspendedAt) {
-            const suspendedDate = new Date(suspendedAt);
-            const now = new Date();
-            const daysElapsed = Math.floor((now.getTime() - suspendedDate.getTime()) / (1000 * 60 * 60 * 24));
-            const daysLeft = 7 - daysElapsed;
-            setSuspensionDaysRemaining(daysLeft > 0 ? daysLeft : 0);
-          } else {
-            setSuspensionDaysRemaining(null);
-          }
-        } catch {
-          const decoded = jwtDecode<JwtPayload>(token);
-          const fallbackName = decoded.email?.split("@")[0] || "User";
-          setUsername(fallbackName);
-        }
-      }
-  
+    let mounted = true;
+
+    const checkHealth = async () => {
       try {
-        const [serversRes, statusRes] = await Promise.all([
-          api.get("/api/environment/servers", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          api.get<{ statuses: ServerStatus[] }>("/api/environment/server-status", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-  
-        const servers = serversRes.data.servers || [];
-        const statuses = statusRes.data.statuses || [];
-  
-        setServerList(statuses);
-  
-        // ✅ Set default selected server to first one
-        if (statuses.length > 0 && !selectedServer) {
-          setSelectedServer(statuses[0].uuid);
+        const data = await api.getApiHealth();
+        if (mounted && data?.status === "ok") {
+          setApiHealth("ok");
+        } else {
+          setApiHealth("down");
         }
-  
-        setStats({
-          total: servers.length,
-          online: statuses.filter((s) => s.status === "running").length,
-          offline: statuses.filter((s) => s.status !== "running").length,
-        });
       } catch {
-        // silent fail
+        if (mounted) setApiHealth("down");
       }
-  
-      const interval = setInterval(fetchStatus, 10000);
-      return () => clearInterval(interval);
     };
-  
-    initialize();
-  }, [selectedServer]);
-  
 
-return (
-  <div className="min-h-screen px-6 pt-24 pb-10">
-    <div className="max-w-screen-xl mx-auto flex flex-col gap-10 items-center">
-      {/* Welcome Header */}
-      <div className="w-full max-w-xl text-center">
-        <WelcomeCoreHUD username={username} />
-      </div>
+    checkHealth();
+    const interval = setInterval(checkHealth, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
-      {/* Middle Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-start">
-        {/* Account + Activity */}
-        <TechFramePanel title="Your Account + Recent Activity">
-          <div className="space-y-6">
-            <BillingSummaryCard status={accountStatus} daysRemaining={suspensionDaysRemaining ?? undefined} />
-            <div>
-              <h3 className="mb-2 text-xs font-mono uppercase tracking-widest text-electricBlueLight">
-                Recent Activity
-              </h3>
-              <AuditLogPreview />
+  useEffect(() => {
+    const headerTimer = setTimeout(() => {
+      setNoticesHeader("Recent notices");
+    }, 12000);
+
+    const liveTimer = setTimeout(() => {
+      setHasLiveUpdate(true);
+      setNoticesHeader("Updated just now");
+    }, 22000);
+
+    return () => {
+      clearTimeout(headerTimer);
+      clearTimeout(liveTimer);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen px-6 pt-24 pb-10">
+      <div className="max-w-screen-xl mx-auto flex flex-col gap-10">
+        <section className="w-full rounded-lg border border-white/10 bg-black/40 px-16 md:px-24 py-6 shadow-subtle">
+          <div className="flex flex-col gap-2 text-left">
+            <h1 className="text-2xl font-heading text-white">
+              Welcome back, <span className="text-electricBlue">{displayName}</span>
+            </h1>
+            <div className="flex items-center gap-3">
+              <span className="text-xs uppercase tracking-[0.3em] text-lightGray">
+                System Health
+              </span>
+              <div className="flex items-end gap-1" title={healthConfig.label}>
+                {[1, 2, 3, 4].map((bar) => (
+                  <span
+                    key={bar}
+                    className={`w-1.5 rounded-sm ${
+                      bar <= healthConfig.bars ? healthConfig.color : "bg-white/10"
+                    }`}
+                    style={{ height: `${6 + bar * 3}px` }}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </TechFramePanel>
+        </section>
 
-        {/* Server Stats */}
-        <TechFramePanel title="Server Management">
-          <div className="space-y-6">
-            <label className="block text-lightGray text-sm mb-2">Select a Server</label>
-            <select
-              className="bg-darkGray text-white p-2 rounded w-full"
-              value={selectedServer}
-              onChange={(e) => setSelectedServer(e.target.value)}
-            >
-              <option value="">-- Select a Server --</option>
-              {serverList.map((s) => (
-                <option key={s.uuid} value={s.uuid}>{s.name}</option>
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-lg border border-white/10 bg-black/30 p-6 shadow-subtle">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-electricBlue">Notices</h2>
+              <span className="text-xs text-lightGray">{noticesHeader}</span>
+            </div>
+            <div className="space-y-4">
+              {notices.map((notice) => (
+                <div
+                  key={notice.id}
+                  className={`rounded-md border border-white/10 bg-darkGray/70 p-4 ${
+                    hasLiveUpdate ? "ring-1 ring-electricBlue/40" : ""
+                  }`}
+                >
+                  <p className="text-xs uppercase tracking-[0.2em] text-lightGray">
+                    {notice.type}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {notice.title}
+                  </p>
+                  <p className="mt-2 text-sm text-lightGray">{notice.body}</p>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedNoticeId(notice.id)}
+                      className="rounded border border-white/10 px-3 py-1 text-[11px] uppercase tracking-widest text-lightGray hover:border-electricBlue hover:text-electricBlue transition"
+                    >
+                      Expand
+                    </button>
+                  </div>
+                </div>
               ))}
-            </select>
-            {selectedStats && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <RadialStat value={selectedStats.resources?.cpu_absolute || 0} label="CPU" color="#00FF88" />
-                <RadialStat value={(selectedStats.resources?.memory_bytes || 0) / 1024 / 1024} label="Memory" max={4096} color="#40CFFF" />
-                <RadialStat value={(selectedStats.resources?.disk_bytes || 0) / 1024 / 1024} label="Disk" max={5120} color="#FF6B6B" />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-white/10 bg-black/30 p-6 shadow-subtle">
+            <h2 className="text-lg font-semibold text-electricBlue">Primary Actions</h2>
+            <p className="mt-2 text-sm text-lightGray">
+              Create a new server when you are ready. Operational actions live in the Servers view.
+            </p>
+            <Link
+              href="/servers/create"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-electricBlue px-4 py-2 text-sm font-semibold text-black hover:bg-electricBlueLight transition"
+            >
+              Create Server
+            </Link>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-white/10 bg-black/30 p-6 shadow-subtle">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-electricBlue">Resource Overview</h2>
+            <span className="text-xs text-lightGray">Summary</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {resources.map((resource) => (
+              <div
+                key={resource.id}
+                className="rounded-md border border-white/10 bg-darkGray/70 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white">{resource.name}</p>
+                  <span className="text-[11px] uppercase tracking-widest text-lightGray">
+                    {resource.type}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-lightGray">Status: {resource.status}</p>
+                <Link
+                  href={`/servers/${resource.id}`}
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-electricBlue text-electricBlue text-xs font-semibold py-2 hover:bg-electricBlue hover:text-black transition"
+                >
+                  Manage
+                </Link>
               </div>
-            )}
+            ))}
           </div>
-        </TechFramePanel>
-
-        {/* Message Board */}
-        <TechFramePanel title="📣 Message Board">
-          <p className="text-sm text-lightGray mb-2">Stay updated with announcements, system alerts, and platform updates.</p>
-          <MessageBoard />
-        </TechFramePanel>
+        </section>
       </div>
 
-      {/* Bottom Quick Actions */}
-      <div className="w-full">
-        <TechFramePanel title="⚡ Quick Actions">
-          <div className="flex flex-wrap gap-4 justify-center mt-2">
-            <button
-              onClick={() => handlePowerAction("start")}
-              className="rounded bg-electricBlue px-4 py-2 text-black hover:bg-electricBlueLight"
-            >
-              Start All
-            </button>
-            <button
-              onClick={() => handlePowerAction("stop")}
-              className="rounded bg-dangerRed px-4 py-2 text-black hover:bg-red-400"
-            >
-              Stop All
-            </button>
-            <button
-              onClick={() => handlePowerAction("restart")}
-              className="rounded bg-electricBlue px-4 py-2 text-black hover:bg-electricBlueLight"
-            >
-              Restart All
-            </button>
-            <Link href="/servers/create" className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">Create Server</Link>
-            <a href={consoleUrl} target="_blank" className="bg-electricBlue text-black px-4 py-2 rounded hover:bg-blue-600">Go to Console</a>
+      {expandedNoticeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6 py-10">
+          <div className="max-w-2xl w-full rounded-lg border border-white/10 bg-darkGray p-6 shadow-subtle">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-electricBlue">
+                Notice Details
+              </h3>
+              <button
+                type="button"
+                onClick={() => setExpandedNoticeId(null)}
+                className="rounded border border-white/10 px-3 py-1 text-xs uppercase tracking-widest text-lightGray hover:border-electricBlue hover:text-electricBlue transition"
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto pr-2">
+              {notices
+                .filter((notice) => notice.id === expandedNoticeId)
+                .map((notice) => (
+                  <div
+                    key={`${notice.id}-full`}
+                    className="rounded-md border border-white/10 bg-black/40 p-4 ring-1 ring-electricBlue/50"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-lightGray">
+                      {notice.type}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {notice.title}
+                    </p>
+                    <p className="mt-2 text-sm text-lightGray">{notice.detail}</p>
+                  </div>
+                ))}
+            </div>
           </div>
-        </TechFramePanel>
-      </div>
+        </div>
+      )}
     </div>
-  </div>
-);
-
-
+  );
 };
-  
-  export default Dashboard;
-  
+
+export default Dashboard;

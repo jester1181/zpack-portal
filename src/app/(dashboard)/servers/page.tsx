@@ -1,197 +1,276 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import api from "@/lib/api-client";
-import GroupedServerList from "@/components/GroupedServerList";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Icon } from "@iconify/react";
 import SteelLayout from "@/components/layouts/SteelLayout";
-
-
-export type Server = {
-  uuid: string;
+import api from "@/lib/api";
+type Server = {
+  id: string;
   name: string;
-  game: string;
-  variant?: string;
-  status?: string;
+  type: "GAME" | "DEV";
+  status: "Running" | "Stopped" | "Provisioning";
+  uptime: string;
+  runtime: string;
+  flavor: string;
+  version: string;
+  hostStatus: "Online" | "Offline";
 };
 
 const ServersPage = () => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [servers, setServers] = useState<Server[]>([]);
-  const [grouped, setGrouped] = useState(true);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const actionLabels: Record<string, string> = {
-    start: "Starting",
-    stop: "Stopping",
-    restart: "Restarting",
+  const normalizeType = (value: unknown): Server["type"] => {
+    if (typeof value === "string") {
+      const upper = value.toUpperCase();
+      if (upper === "GAME" || upper === "DEV") {
+        return upper as Server["type"];
+      }
+    }
+    return "GAME";
+  };
+
+  const normalizeStatus = (value: unknown): Server["status"] => {
+    if (typeof value === "string") {
+      const lower = value.toLowerCase();
+      if (lower === "running") return "Running";
+      if (lower === "stopped" || lower === "offline") return "Stopped";
+      if (lower === "provisioning" || lower === "starting" || lower === "deploying") {
+        return "Provisioning";
+      }
+    }
+    return "Provisioning";
+  };
+
+  const normalizeServer = (server: Record<string, unknown>): Server => {
+    const id =
+      (server.id as string) ||
+      (server.uuid as string) ||
+      (server._id as string) ||
+      (server.name as string) ||
+      "unknown";
+    const name =
+      (typeof server.name === "string" && server.name) ||
+      (typeof server.displayName === "string" && server.displayName) ||
+      "Unnamed Server";
+    const type = normalizeType(server.type ?? server.kind ?? server.category);
+    const statusRaw =
+      server.status ?? server.state ?? server.powerState ?? server.uptime ?? server.health;
+    let status = normalizeStatus(statusRaw);
+    const agentStatusRaw =
+      server.agentStatus ??
+      server.agent_status ??
+      (server.agent && (server.agent as { status?: string }).status);
+    const agentStatusValue =
+      typeof agentStatusRaw === "string" ? agentStatusRaw.toLowerCase() : "";
+    const hostStatus =
+      agentStatusValue === "online" ||
+      agentStatusValue === "connected" ||
+      agentStatusValue === "healthy" ||
+      agentStatusValue === "ok"
+        ? "Online"
+        : "Offline";
+    const uptime =
+      (typeof server.uptime === "string" && server.uptime) ||
+      (status === "Running" ? "Online" : "Stopped");
+    if (status === "Provisioning" && typeof uptime === "string") {
+      const uptimeLower = uptime.toLowerCase();
+      if (uptimeLower.includes("stopped") || uptimeLower.includes("offline")) {
+        status = "Stopped";
+      }
+    }
+
+    return {
+      id,
+      name,
+      type,
+      status,
+      uptime,
+      runtime: (server.runtime as string) || "Unknown",
+      flavor: (server.flavor as string) || "Unknown",
+      version: (server.version as string) || "Unknown",
+      hostStatus,
+    };
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    let mounted = true;
 
-    const fetchAndMergeServers = async () => {
+    const loadServers = async () => {
       try {
-        const [serverRes, statusRes] = await Promise.all([
-          api.get<{ servers: Server[] }>("/api/environment/servers", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          api.get<{ statuses: { uuid: string; status: string }[] }>(
-            "/api/environment/server-status",
-            { headers: { Authorization: `Bearer ${token}` } }
-          ),
-        ]);
-
-        const rawServers = serverRes.data.servers || [];
-        const statuses = statusRes.data.statuses || [];
-
-        const merged = rawServers.map((server) => {
-          const match = statuses.find((s) => s.uuid === server.uuid);
-          return {
-            ...server,
-            status: match?.status || "unknown",
-          };
-        });
-
-        setServers(merged);
-      } catch {
-        toast.error("Failed to update server status.");
+        const response = await api.listServers();
+        const payload = response?.data?.servers ?? response?.data ?? [];
+        const normalized = Array.isArray(payload)
+          ? payload.map((server: Record<string, unknown>) => normalizeServer(server))
+          : [];
+        if (mounted) {
+          setServers(normalized);
+          setError(null);
+        }
+      } catch (err) {
+        if (mounted) setError("Failed to load servers.");
+      } finally {
+        if (mounted) setIsLoading(false);
       }
     };
 
-    fetchAndMergeServers();
-    const interval = setInterval(fetchAndMergeServers, 10000);
-    return () => clearInterval(interval);
-  }, [router]);
+    loadServers();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const handleConsole = (uuid: string) => {
-    const token = sessionStorage.getItem("sso_token");
-    if (!token) return toast.error("SSO token missing");
 
-    const url = `https://panel.zerolaghub.com/login/token?access_token=${token}&redirect=/server/${uuid}`;
-    window.open(url, "_blank");
+  const groupedServers = useMemo(() => {
+    return {
+      GAME: servers.filter((server) => server.type === "GAME"),
+      DEV: servers.filter((server) => server.type === "DEV"),
+    };
+  }, [servers]);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedId((current) => (current === id ? null : id));
   };
 
-  const handleUpgrade = (uuid: string) => {
-    router.push(`/servers/upgrade?uuid=${uuid}`);
-  };
-
-  const handleAction = async (uuid: string, action: string) => {
-    const toastId = toast.loading(`${actionLabels[action]}...`);
-    try {
-      const token = localStorage.getItem("token");
-      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/servers/${uuid}/${action}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (res.ok) {
-        toast.success(`${actionLabels[action]} succeeded`, { id: toastId });
-      } else {
-        const data = await res.json();
-        toast.error(data?.error || "Failed", { id: toastId });
-      }
-    } catch {
-      toast.error("Unexpected error", { id: toastId });
+  const iconForServer = (server: Server) => {
+    if (server.type === "GAME") {
+      return "mdi:minecraft";
     }
+    return "mdi:code-tags";
   };
 
   return (
     <SteelLayout>
-      <div className="max-w-screen-lg mx-auto px-6 py-10">
-        <h1 className="text-4xl font-heading text-electricBlue mb-6 text-center">
-          Your Servers
-        </h1>
-
-        {/* Toggle View */}
-        <div className="flex justify-center mb-6">
-          <button
-            className={`px-4 py-2 font-semibold rounded-l ${
-              grouped
-                ? "bg-electricBlue text-black"
-                : "bg-gray-700 text-white hover:bg-gray-600"
-            }`}
-            onClick={() => setGrouped(true)}
-          >
-            Group by Game
-          </button>
-          <button
-            className={`px-4 py-2 font-semibold rounded-r ${
-              !grouped
-                ? "bg-electricBlue text-black"
-                : "bg-gray-700 text-white hover:bg-gray-600"
-            }`}
-            onClick={() => setGrouped(false)}
-          >
-            Flat View
-          </button>
+      <div className="max-w-screen-xl mx-auto px-6 py-10">
+        <div className="mb-8 flex flex-col gap-2 text-center">
+          <h1 className="text-4xl font-heading text-electricBlue">Servers</h1>
+          <p className="text-sm text-lightGray">
+            Read-only overview of server contexts. Operational actions live in System View.
+          </p>
         </div>
 
-        {servers.length > 0 ? (
-          grouped ? (
-            <GroupedServerList
-              servers={servers}
-              onAction={handleAction}
-              onConsole={handleConsole}
-              onUpgrade={handleUpgrade}
-            />
-          ) : (
-            <ul className="space-y-4">
-              {servers.map((server) => (
-                <li
-                  key={server.uuid}
-                  className="bg-darkGray p-4 rounded shadow-subtle flex justify-between items-center"
-                >
-                  <div>
-                    <p className="text-white font-bold">{server.name}</p>
-                    <p className="text-sm text-gray-400">{server.status}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="px-4 py-2 bg-electricBlue text-black rounded hover:bg-electricBlueLight transition"
-                      onClick={() => handleConsole(server.uuid)}
-                    >
-                      Go to Console
-                    </button>
-                    <button
-                      className="px-3 py-2 text-sm bg-blue-700 text-white rounded hover:bg-blue-600 transition"
-                      onClick={() => handleUpgrade(server.uuid)}
-                    >
-                      Upgrade
-                    </button>
-                    {["start", "stop", "restart"].map((action) => (
-                      <button
-                        key={action}
-                        onClick={() => handleAction(server.uuid, action)}
-                        className="px-3 py-2 text-sm bg-gray-700 text-white rounded hover:bg-gray-600 transition"
-                      >
-                        {action.charAt(0).toUpperCase() + action.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )
-        ) : (
-          <p className="text-center text-lightGray text-lg">No servers found.</p>
-        )}
+        <div className="space-y-10">
+          {isLoading && (
+            <div className="rounded-lg border border-white/10 bg-black/30 p-6 text-sm text-lightGray">
+              Loading servers...
+            </div>
+          )}
+          {!isLoading && error && (
+            <div className="rounded-lg border border-dangerRed/40 bg-dangerRed/10 p-6 text-sm text-dangerRed">
+              {error}
+            </div>
+          )}
+          {(["GAME", "DEV"] as const).map((group) => (
+            <section key={group} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">
+                  {group === "GAME" ? "Game Servers" : "Development Servers"}
+                </h2>
+                <span className="text-xs uppercase tracking-widest text-lightGray">
+                  {group}
+                </span>
+              </div>
 
-        <div className="text-center mt-10">
-          <button
-            className="px-6 py-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
-            onClick={() => router.push("/servers/create")}
-          >
-            Create Server
-          </button>
+              <div className="space-y-4">
+                {!isLoading && !error && groupedServers[group].length === 0 && (
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-5 text-sm text-lightGray">
+                    No servers in this group yet.
+                  </div>
+                )}
+                {groupedServers[group].map((server) => {
+                  const isExpanded = expandedId === server.id;
+                  return (
+                    <div
+                      key={server.id}
+                      className="rounded-lg border border-white/10 bg-black/30 p-5 shadow-subtle"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(server.id)}
+                        className="flex w-full items-center justify-between gap-4 text-left bg-transparent p-0 hover:bg-white/5 rounded-md transition"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-darkGray text-electricBlue">
+                            <Icon icon={iconForServer(server)} width="26" height="26" />
+                          </div>
+                          <div>
+                            <p className="text-base font-semibold text-white">{server.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-lightGray">
+                              <span className="rounded-full border border-white/10 px-2 py-0.5 uppercase">
+                                {server.type}
+                              </span>
+                              <span>Status: {server.status}</span>
+                              <span>Host: {server.hostStatus}</span>
+                              {server.uptime &&
+                                server.uptime.toLowerCase() !==
+                                  server.status.toLowerCase() &&
+                                server.uptime.toLowerCase() !==
+                                  server.status.toLowerCase().replace("running", "online") && (
+                                  <span>{server.uptime}</span>
+                                )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-lightGray">
+                          <Icon
+                            icon="mdi:chevron-down"
+                            className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            width="20"
+                            height="20"
+                          />
+                        </div>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-4 border-t border-white/10 pt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-lightGray">
+                            <div>
+                              <p className="text-xs uppercase tracking-widest text-lightGray">
+                                {server.type === "GAME" ? "Game" : "Runtime"}
+                              </p>
+                              <p className="text-white">{server.runtime}</p>
+                            </div>
+                            {server.type !== "DEV" && (
+                              <div>
+                                <p className="text-xs uppercase tracking-widest text-lightGray">
+                                  Flavor
+                                </p>
+                                <p className="text-white">{server.flavor}</p>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-xs uppercase tracking-widest text-lightGray">
+                                Version
+                              </p>
+                              <p className="text-white">{server.version}</p>
+                            </div>
+                          </div>
+                          <div className="mt-5 flex justify-between items-center">
+                            <button
+                              type="button"
+                              onClick={() => toggleExpanded(server.id)}
+                              className="text-xs uppercase tracking-widest text-lightGray hover:text-electricBlue transition"
+                            >
+                              Collapse
+                            </button>
+                            <Link
+                              href={`/servers/${server.id}`}
+                              className="rounded-md bg-electricBlue px-4 py-2 text-sm font-semibold text-black hover:bg-electricBlueLight transition"
+                            >
+                              System View
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </SteelLayout>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
 
 type Announcement = {
   id: number;
@@ -16,7 +16,7 @@ const MessageBoard = () => {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await api.get("/api/announcements");
+        const res = await api.listAnnouncements();
         setAnnouncements(res.data.announcements || []);
       } catch (err) {
         console.error("Failed to load announcements", err);

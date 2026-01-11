@@ -1,45 +1,55 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
+import { useAuth } from "@/context/authContext";
 import toast from "react-hot-toast";
-import { jwtDecode } from "jwt-decode";
+
+type ProfileForm = {
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+};
+
+type ApiMeUser = {
+  id?: string;
+  email?: string;
+  username?: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+};
 
 const Profile = () => {
-  const [form, setForm] = useState({
+  const { token } = useAuth();
+  const [form, setForm] = useState<ProfileForm>({
     email: "",
     username: "",
-    first_name: "",
-    last_name: "",
-    nickname: "",
+    firstName: "",
+    lastName: "",
+    displayName: "",
   });
 
-  const [original, setOriginal] = useState({ ...form });
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [original, setOriginal] = useState<ProfileForm>(form);
   const [loading, setLoading] = useState(true);
 
   // 🧠 Fetch user data
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) return;
-
-    // Decode JWT to check is_admin
-    const decoded = jwtDecode<{ is_admin: number }>(token);
-    setIsAdmin(decoded?.is_admin === 1);
 
     const fetchProfile = async () => {
       try {
-        const res = await api.get("/api/users/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.getMe(token);
+        const user: ApiMeUser = res.data?.user ?? {};
 
-        // ✅ Normalize nulls to empty strings
-        const clean = {
-          email: res.data.email || "",
-          username: res.data.username || "",
-          first_name: res.data.first_name || "",
-          last_name: res.data.last_name || "",
-          nickname: res.data.nickname || "",
+        const clean: ProfileForm = {
+          email: user.email ?? "",
+          username: user.username ?? "",
+          firstName: user.firstName ?? "",
+          lastName: user.lastName ?? "",
+          displayName: user.displayName ?? "",
         };
 
         setForm(clean);
@@ -52,7 +62,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [token]);
 
   // ✏️ Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,29 +71,31 @@ const Profile = () => {
 
   // 💾 Save handler
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     if (!token) return;
 
     // ✅ Sanitize values
     const trimmed = {
-      ...form,
-      first_name: form.first_name?.trim() || "User",
-      last_name: form.last_name?.trim() || "Updated",
-      nickname: form.nickname?.trim() || "",
+      firstName: form.firstName?.trim() || "User",
+      lastName: form.lastName?.trim() || "Updated",
+      displayName: form.displayName?.trim() || "",
     };
 
     // ✅ Prevent whitespace-only names
-    if (!trimmed.first_name.trim() || !trimmed.last_name.trim()) {
+    if (!trimmed.firstName.trim() || !trimmed.lastName.trim()) {
       return toast.error("First and last name cannot be empty.");
     }
 
     try {
       toast.dismiss();
-      await api.put("/api/users/profile", trimmed, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.updateProfile(token, trimmed);
       toast.success("Profile updated!");
-      setOriginal(trimmed);
+      setOriginal({
+        email: form.email,
+        username: form.username,
+        firstName: trimmed.firstName,
+        lastName: trimmed.lastName,
+        displayName: trimmed.displayName,
+      });
     } catch {
       toast.error("Failed to save profile");
     }
@@ -109,7 +121,6 @@ const Profile = () => {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  disabled={!isAdmin}
                   className="w-full p-2 bg-darkGray text-white rounded"
                 />
               </div>
@@ -122,7 +133,6 @@ const Profile = () => {
                   name="username"
                   value={form.username}
                   onChange={handleChange}
-                  disabled={!isAdmin}
                   className="w-full p-2 bg-darkGray text-white rounded"
                 />
               </div>
@@ -132,8 +142,8 @@ const Profile = () => {
                 <label className="block text-lightGray mb-1 font-bold">First Name</label>
                 <input
                   type="text"
-                  name="first_name"
-                  value={form.first_name}
+                  name="firstName"
+                  value={form.firstName}
                   onChange={handleChange}
                   className="w-full p-2 bg-darkGray text-white rounded"
                 />
@@ -144,8 +154,8 @@ const Profile = () => {
                 <label className="block text-lightGray mb-1 font-bold">Last Name</label>
                 <input
                   type="text"
-                  name="last_name"
-                  value={form.last_name}
+                  name="lastName"
+                  value={form.lastName}
                   onChange={handleChange}
                   className="w-full p-2 bg-darkGray text-white rounded"
                 />
@@ -156,8 +166,8 @@ const Profile = () => {
                 <label className="block text-lightGray mb-1 font-bold">Nickname (Display Name)</label>
                 <input
                   type="text"
-                  name="nickname"
-                  value={form.nickname}
+                  name="displayName"
+                  value={form.displayName}
                   onChange={handleChange}
                   className="w-full p-2 bg-darkGray text-white rounded"
                 />

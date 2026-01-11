@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 
-import api from "@/lib/api-client"; // Import API utility
+import api from "@/lib/api"; // Import API utility
 
 const Support = () => {
     const [formData, setFormData] = useState({
@@ -31,7 +31,7 @@ const Support = () => {
         }
 
         try {
-            const response = await api.post("api/support/create", formData);
+            const response = await api.submitSupportRequest(formData);
             if (response.status === 200) {
                 setSuccess("Your support request has been submitted successfully.");
                 setFormData({ name: "", email: "", subject: "", message: "" });

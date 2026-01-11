@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api-client";
+import api from "@/lib/api";
+import { useAuth } from "@/context/authContext";
 
 type BillingStatus = "active" | "inactive" | "past_due" | "canceled" | null;
 
@@ -12,19 +13,17 @@ type UserProfile = {
 };
 
 export default function BillingPage() {
+  const { token } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) return;
 
     const fetchProfile = async () => {
       try {
-        const res = await api.get("/api/users/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfile(res.data);
+      const res = await api.getProfile(token);
+      setProfile(res.data);
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
@@ -33,14 +32,11 @@ export default function BillingPage() {
     };
 
     fetchProfile();
-  }, []);
+  }, [token]);
 
   const handleOpenPortal = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await api.post("/api/billing/portal", null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.getBillingPortal(token);
       window.location.href = res.data.url;
     } catch (err) {
       console.error("Error opening portal:", err);
@@ -50,13 +46,7 @@ export default function BillingPage() {
 
   const handleCheckout = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await api.post("/api/billing/checkout", null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await api.getBillingCheckout(token);
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {

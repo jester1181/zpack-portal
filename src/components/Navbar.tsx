@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Modal from "@/components/Modal";
 import { useAuth } from "@/context/authContext";
 import SuspensionBanner from "@/components/SuspensionBanner";
 import UserDropdownMenu from "@/components/UserDropdownMenu";
@@ -11,9 +10,6 @@ import UserDropdownMenu from "@/components/UserDropdownMenu";
 const Navbar: React.FC = () => {
   const {
     token,
-    setToken,
-    showModal,
-    refreshToken,
     logout,
     profile,
     suspensionDaysRemaining,
@@ -29,11 +25,6 @@ const Navbar: React.FC = () => {
       setNickname("User");
     }
   }, [profile]);
-
-  const handleLogout = () => {
-    setToken(null);
-    window.location.href = "/login";
-  };
 
   const isActive = (path: string) => pathname === path;
 
@@ -83,7 +74,7 @@ const Navbar: React.FC = () => {
 
         {/* Auth Buttons or User Menu */}
         {token ? (
-          <UserDropdownMenu nickname={nickname} onLogout={handleLogout} />
+          <UserDropdownMenu nickname={nickname} onLogout={logout} />
         ) : (
           <div className="hidden md:flex gap-2">
             <Link
@@ -103,15 +94,6 @@ const Navbar: React.FC = () => {
       </nav>
 
       {/* Session Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={logout}
-        onConfirm={refreshToken}
-        title="Session Expiring"
-        message="Your session is about to expire. Would you like to stay logged in?"
-        confirmText="Stay Logged In"
-        cancelText="Logout"
-      />
     </>
   );
 };

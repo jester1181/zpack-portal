@@ -1,112 +1,53 @@
 /* eslint-disable */
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import axios from "axios";
-import Cookies from "js-cookie";
+import SteelLayout from "@/components/layouts/SteelLayout";
 import { useAuth } from "@/context/authContext";
-import SteelLayout from "@/components/layouts/SteelLayout"; 
+import api from "@/lib/api";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); 
+export default function Login() {
   const router = useRouter();
   const { setToken } = useAuth();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const fetchCsrfToken = async () => {
-    try {
-      let csrfToken = Cookies.get("XSRF-TOKEN");
-
-      if (!csrfToken) {
-        console.log("⚠️ CSRF Token missing. Fetching a new one...");
-
-        const response = await axios.get("https://api.zerolaghub.com/auth/csrf", {
-          withCredentials: true,
-        });
-
-        csrfToken = response.data.csrfToken;
-        console.log("✅ CSRF Token Retrieved:", csrfToken);
-      }
-
-      return csrfToken;
-    } catch (error) {
-      console.error("❌ Failed to fetch CSRF Token:", error);
-      setError("CSRF Token could not be retrieved.");
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    fetchCsrfToken();
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-  
+    setLoading(true);
+
     try {
-      let csrfToken = Cookies.get("XSRF-TOKEN") || await fetchCsrfToken();
-      if (!csrfToken) throw new Error("CSRF token missing.");
-  
-      console.log("✅ Using CSRF Token for Login:", csrfToken);
-  
-      const response = await axios.post(
-        "https://api.zerolaghub.com/auth/login",
-        { email, password },
-        {
-          withCredentials: true,
-          headers: {
-            "X-CSRF-Token": csrfToken,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-  
-      console.log("✅ Login successful!", response.data);
-      const token = response.data.token;
+      const res = await api.login({ identifier, password });
+      const token = res.data?.token;
 
-      setToken(token);
-      sessionStorage.setItem("sso_token", token);
-
-      router.push("/dashboard");
-
-    } catch (err: any) {
-      if (err.response && err.response.status === 403) {
-        console.warn("⚠️ CSRF Token possibly expired. Retrying login...");
-        const newCsrfToken = await fetchCsrfToken();
-        if (newCsrfToken) {
-          return handleLogin(e);
-        }
+      if (!token) {
+        throw new Error("Login failed");
       }
 
-      console.error("❌ Login failed:", err);
-      setError("Login failed. Please try again.");
+      setToken(token);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      let message = "Login failed";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "string") {
+        message = err;
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    try {
-      console.log("✅ Logging out...");
-      await axios.post("https://api.zerolaghub.com/auth/logout", {}, { withCredentials: true });
-
-      console.log("✅ Logged out successfully, clearing CSRF token...");
-      Cookies.remove("XSRF-TOKEN", { path: "/" });
-
-      await fetchCsrfToken();
-      router.push("/login");
-    } catch (error) {
-      console.error("❌ Logout failed:", error);
-    }
-  };
+  }
 
   return (
     <SteelLayout>
       <div className="flex items-center justify-center min-h-screen">
-        <div className="p-8 bg-darkGray rounded-lg shadow-subtle max-w-sm text-center">
+        <div className="p-8 bg-darkGray rounded-lg shadow-subtle max-w-sm w-full text-center">
           <Image
             src="/images/zlhlogo_enlarged.png"
             alt="ZeroLagHub Logo"
@@ -114,44 +55,46 @@ const Login = () => {
             height={150}
             className="mx-auto mb-4"
           />
-          <h1 className="text-electricBlue text-2xl font-bold mb-4">Login</h1>
+
+          <h1 className="text-electricBlue text-2xl font-bold mb-4">
+            Login
+          </h1>
+
           {error && (
-            <p className="text-red-500 bg-red-100 p-2 rounded mb-4">{error}</p>
+            <div className="mb-4 text-red-500 bg-red-100 p-2 rounded">
+              {error}
+            </div>
           )}
+
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-lightGray text-left mb-1">Email:</label>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
-              />
-            </div>
-            <div>
-              <label className="block text-lightGray text-left mb-1">Password:</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full p-3 bg-black border border-electricBlue rounded focus:outline-none focus:border-electricBlueLight"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Email or Username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+              className="w-full p-3 bg-black border border-electricBlue rounded"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-3 bg-black border border-electricBlue rounded"
+            />
+
             <button
               type="submit"
+              disabled={loading}
               className="w-full p-3 bg-electricBlue text-black font-bold rounded hover:bg-electricBlueLight transition"
             >
-              Login
+              {loading ? "Logging in…" : "Login"}
             </button>
           </form>
-          </div>
+        </div>
       </div>
     </SteelLayout>
   );
-};
-
-export default Login;
+}

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 
-import api from "@/lib/api-client";
-import { NESTS_ROUTE, EGGS_ROUTE, CREATE_SERVER_ROUTE, ALLOCATIONS_ROUTE } from "@/services/routes";
+import api from "@/lib/api";
+import { useAuth } from "@/context/authContext";
 
 // Define types for clarity
 type Nest = {
@@ -23,6 +23,7 @@ type Allocation = {
 };
 
 const CreateServer = () => {
+    const { token } = useAuth();
     const [serverName, setServerName] = useState("");
     const [nests, setNests] = useState<Nest[]>([]);
     const [selectedNestId, setSelectedNestId] = useState<number | null>(null);
@@ -43,21 +44,16 @@ const CreateServer = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem("token");
             if (!token) {
                 setError("User is not authenticated.");
                 return;
             }
 
             try {
-                const nestsResponse = await api.get<Nest[]>(NESTS_ROUTE, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const nestsResponse = await api.listNests(token);
                 setNests(nestsResponse.data);
 
-                const allocationsResponse = await api.get<{ allocations: Allocation[] }>(ALLOCATIONS_ROUTE, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const allocationsResponse = await api.listAllocations(token);
                 setAllocations(allocationsResponse.data.allocations || []);
                 setSelectedAllocationId(null); // Reset allocation on reload
             } catch (error) {
@@ -67,7 +63,7 @@ const CreateServer = () => {
         };
 
         fetchData();
-    }, []);
+    }, [token]);
 
     const handleNestChange = async (nestId: number) => {
         setSelectedNestId(nestId);
@@ -75,15 +71,12 @@ const CreateServer = () => {
         setGame(selectedNest ? selectedNest.name : null);
 
         try {
-            const token = localStorage.getItem("token");
             if (!token) {
                 setError("User is not authenticated.");
                 return;
             }
 
-            const eggsResponse = await api.get<Egg[]>(EGGS_ROUTE(nestId), {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const eggsResponse = await api.listEggs(token, nestId);
             setEggs(eggsResponse.data);
 
             if (eggsResponse.data.length > 0) {
@@ -91,9 +84,7 @@ const CreateServer = () => {
                 setSelectedEggId(firstEgg.id);
                 setVariant(firstEgg.name);
 
-                const startupResponse = await api.get(`${EGGS_ROUTE(nestId)}/${firstEgg.id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const startupResponse = await api.getEggDetails(token, nestId, firstEgg.id);
                 setStartup(startupResponse.data.startup_command || "");
             }
         } catch (error) {
@@ -109,15 +100,12 @@ const CreateServer = () => {
 
         if (selectedNestId) {
             try {
-                const token = localStorage.getItem("token");
                 if (!token) {
                     setError("User is not authenticated.");
                     return;
                 }
 
-                const startupResponse = await api.get(`${EGGS_ROUTE(selectedNestId)}/${eggId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const startupResponse = await api.getEggDetails(token, selectedNestId, eggId);
                 setStartup(startupResponse.data.startup_command || "");
             } catch (error) {
                 console.error("Error fetching startup command:", error);
@@ -153,15 +141,12 @@ const CreateServer = () => {
                 ...(game === "Project Zomboid" && { environment: { ADMIN_PASSWORD: adminPassword } }),
             };
     
-            const token = localStorage.getItem("token");
             if (!token) {
                 setError("User is not authenticated.");
                 return;
             }
     
-            const response = await api.post(CREATE_SERVER_ROUTE, payload, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const response = await api.createServer(token, payload);
     
             if (response.status === 201) {
                 setSuccess("Server created successfully!");
