@@ -5,15 +5,17 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import SteelLayout from "@/components/layouts/SteelLayout";
 import api from "@/lib/api";
+import apiClient from "@/lib/api-client";
 type Server = {
   id: string;
   name: string;
   type: "GAME" | "DEV";
-  status: "Running" | "Stopped" | "Provisioning";
-  uptime: string;
+  status: "Running" | "Stopped" | "Provisioning" | "Offline" | "Host Offline";
   runtime: string;
   flavor: string;
   version: string;
+  agentStatus: "online" | "offline" | "unknown";
+  agentIp?: string;
   hostStatus: "Online" | "Offline";
 };
 
@@ -22,6 +24,10 @@ const ServersPage = () => {
   const [servers, setServers] = useState<Server[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Server | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [hostMenuId, setHostMenuId] = useState<string | null>(null);
+  const [hostActionId, setHostActionId] = useState<string | null>(null);
 
   const normalizeType = (value: unknown): Server["type"] => {
     if (typeof value === "string") {
@@ -33,16 +39,13 @@ const ServersPage = () => {
     return "GAME";
   };
 
-  const normalizeStatus = (value: unknown): Server["status"] => {
+  const normalizeAgentStatus = (value: unknown): Server["agentStatus"] => {
     if (typeof value === "string") {
       const lower = value.toLowerCase();
-      if (lower === "running") return "Running";
-      if (lower === "stopped" || lower === "offline") return "Stopped";
-      if (lower === "provisioning" || lower === "starting" || lower === "deploying") {
-        return "Provisioning";
-      }
+      if (lower === "online") return "online";
+      if (lower === "offline") return "offline";
     }
-    return "Provisioning";
+    return "unknown";
   };
 
   const normalizeServer = (server: Record<string, unknown>): Server => {
@@ -58,40 +61,63 @@ const ServersPage = () => {
       "Unnamed Server";
     const type = normalizeType(server.type ?? server.kind ?? server.category);
     const statusRaw =
-      server.status ?? server.state ?? server.powerState ?? server.uptime ?? server.health;
-    let status = normalizeStatus(statusRaw);
+      server.status ?? server.state ?? server.powerState ?? server.health;
+    const hostStatusRaw = server.hostStatus ?? server.host_status;
     const agentStatusRaw =
       server.agentStatus ??
       server.agent_status ??
       (server.agent && (server.agent as { status?: string }).status);
-    const agentStatusValue =
-      typeof agentStatusRaw === "string" ? agentStatusRaw.toLowerCase() : "";
+    const agentStatus = normalizeAgentStatus(agentStatusRaw);
+    const hostStatusValue =
+      typeof hostStatusRaw === "string" ? hostStatusRaw.toLowerCase() : "";
     const hostStatus =
-      agentStatusValue === "online" ||
-      agentStatusValue === "connected" ||
-      agentStatusValue === "healthy" ||
-      agentStatusValue === "ok"
+      hostStatusValue === "online" || hostStatusValue === "up"
         ? "Online"
-        : "Offline";
-    const uptime =
-      (typeof server.uptime === "string" && server.uptime) ||
-      (status === "Running" ? "Online" : "Stopped");
-    if (status === "Provisioning" && typeof uptime === "string") {
-      const uptimeLower = uptime.toLowerCase();
-      if (uptimeLower.includes("stopped") || uptimeLower.includes("offline")) {
-        status = "Stopped";
-      }
-    }
+        : hostStatusValue === "offline" || hostStatusValue === "down"
+          ? "Offline"
+          : agentStatus === "online"
+            ? "Online"
+            : "Offline";
+    const statusValue = typeof statusRaw === "string" ? statusRaw.toLowerCase() : "";
+    const status =
+      typeof statusRaw === "string" && statusValue.length > 0
+        ? statusValue === "running"
+          ? "Running"
+          : statusValue === "installing"
+            ? "Provisioning"
+            : statusValue === "idle" || statusValue === "stopped"
+              ? "Stopped"
+              : statusValue === "offline"
+                ? "Offline"
+                : statusValue === "host offline"
+                  ? "Host Offline"
+                  : "Stopped"
+        : type === "DEV"
+          ? agentStatus === "online"
+            ? "Running"
+            : "Offline"
+          : agentStatus === "offline"
+            ? "Host Offline"
+            : "Stopped";
 
     return {
       id,
       name,
       type,
       status,
-      uptime,
       runtime: (server.runtime as string) || "Unknown",
       flavor: (server.flavor as string) || "Unknown",
       version: (server.version as string) || "Unknown",
+      agentStatus,
+      agentIp:
+        (server.agentIp as string) ||
+        (server.agent_ip as string) ||
+        (server.hostIp as string) ||
+        (server.host_ip as string) ||
+        (server.ip as string) ||
+        (server.nodeIp as string) ||
+        (server.node_ip as string) ||
+        undefined,
       hostStatus,
     };
   };
@@ -118,8 +144,13 @@ const ServersPage = () => {
     };
 
     loadServers();
+    const handleFocus = () => {
+      loadServers();
+    };
+    window.addEventListener("focus", handleFocus);
     return () => {
       mounted = false;
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -133,6 +164,19 @@ const ServersPage = () => {
 
   const toggleExpanded = (id: string) => {
     setExpandedId((current) => (current === id ? null : id));
+  };
+
+  const handleHostAction = async (server: Server, action: "start" | "stop" | "restart") => {
+    try {
+      setHostActionId(server.id);
+      setError(null);
+      await apiClient.post(`/api/servers/${server.id}/host/${action}`);
+    } catch {
+      setError("Failed to update host state.");
+    } finally {
+      setHostActionId(null);
+      setHostMenuId(null);
+    }
   };
 
   const iconForServer = (server: Server) => {
@@ -204,13 +248,6 @@ const ServersPage = () => {
                               </span>
                               <span>Status: {server.status}</span>
                               <span>Host: {server.hostStatus}</span>
-                              {server.uptime &&
-                                server.uptime.toLowerCase() !==
-                                  server.status.toLowerCase() &&
-                                server.uptime.toLowerCase() !==
-                                  server.status.toLowerCase().replace("running", "online") && (
-                                  <span>{server.uptime}</span>
-                                )}
                             </div>
                           </div>
                         </div>
@@ -249,18 +286,74 @@ const ServersPage = () => {
                             </div>
                           </div>
                           <div className="mt-5 flex justify-between items-center">
-                            <button
-                              type="button"
-                              onClick={() => toggleExpanded(server.id)}
-                              className="text-xs uppercase tracking-widest text-lightGray hover:text-electricBlue transition"
-                            >
-                              Collapse
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => toggleExpanded(server.id)}
+                                className="text-xs uppercase tracking-widest text-lightGray hover:text-electricBlue transition"
+                              >
+                                Collapse
+                              </button>
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setHostMenuId((current) =>
+                                      current === server.id ? null : server.id
+                                    )
+                                  }
+                                  className="rounded-md border border-white/20 px-4 py-2 text-sm font-semibold text-lightGray hover:border-white/40 transition"
+                                >
+                                  Host
+                                </button>
+                                {hostMenuId === server.id && (
+                                  <div className="absolute left-0 top-[110%] z-10 min-w-[200px] rounded-lg border border-white/10 bg-black/90 p-2 shadow-subtle">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHostAction(server, "start")}
+                                      disabled={hostActionId === server.id}
+                                      className="w-full rounded-md px-3 py-2 text-left text-sm text-lightGray hover:bg-white/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      Start Host
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHostAction(server, "stop")}
+                                      disabled={hostActionId === server.id}
+                                      className="mt-1 w-full rounded-md px-3 py-2 text-left text-sm text-lightGray hover:bg-white/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      Stop Host
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHostAction(server, "restart")}
+                                      disabled={hostActionId === server.id}
+                                      className="mt-1 w-full rounded-md px-3 py-2 text-left text-sm text-lightGray hover:bg-white/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      Restart Host
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteTarget(server)}
+                                      className="mt-1 w-full rounded-md px-3 py-2 text-left text-sm text-dangerRed hover:bg-white/10 transition"
+                                    >
+                                      Delete Server
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                             <Link
-                              href={`/servers/${server.id}`}
+                              href={{
+                                pathname:
+                                  server.type === "GAME"
+                                    ? "/servers/console/game"
+                                    : "/servers/console/dev",
+                                query: { serverId: server.id },
+                              }}
                               className="rounded-md bg-electricBlue px-4 py-2 text-sm font-semibold text-black hover:bg-electricBlueLight transition"
                             >
-                              System View
+                              Open Console
                             </Link>
                           </div>
                         </div>
@@ -273,6 +366,54 @@ const ServersPage = () => {
           ))}
         </div>
       </div>
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-md rounded-lg border border-white/10 bg-darkGray p-6 shadow-subtle">
+            <h2 className="text-lg font-semibold text-white">Delete server?</h2>
+            <p className="mt-2 text-sm text-lightGray">
+              This will permanently delete{" "}
+              <span className="text-white">{deleteTarget.name}</span>. Are you sure?
+            </p>
+            {error && (
+              <p className="mt-3 text-sm text-dangerRed">
+                {error}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-md border border-white/10 px-4 py-2 text-sm font-semibold text-lightGray hover:border-white/30 transition"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsDeleting(true);
+                  setError(null);
+                  try {
+                    await apiClient.delete(`/api/containers/${deleteTarget.id}`);
+                    setServers((current) =>
+                      current.filter((server) => server.id !== deleteTarget.id)
+                    );
+                    setDeleteTarget(null);
+                  } catch {
+                    setError("Failed to delete server.");
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="rounded-md bg-dangerRed px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SteelLayout>
   );
 };

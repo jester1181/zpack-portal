@@ -84,6 +84,12 @@ export const listServers = async (token?: string | null) => {
   });
 };
 
+export const listInstances = async (token?: string | null) => {
+  return apiClient.get("/api/instances", {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+};
+
 export const listServerStatuses = async (token: string | null) => {
   // TODO(APIv2): Replace Pterodactyl status endpoint with v2 resources.
   return apiClient.get("/api/environment/server-status", {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 import api from "@/lib/api";
 import { getSessionToken, setSessionToken } from "@/lib/auth/session";
 
@@ -103,6 +104,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
       } catch (error) {
         console.error("❌ Failed to fetch profile:", error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          logout();
+          return;
+        }
         setProfile(null);
         setBillingStatus(null);
         setSuspensionDaysRemaining(null);
